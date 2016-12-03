@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 import os.path
 import re
+import signal
 import time
 
 from slackclient import SlackClient
@@ -68,6 +69,18 @@ class MinecraftBot:
         
         return most_recent_timestamp
         
+    def remember_timestamp(self, timestamp):
+        """ Record the timestamp from a given log line as its mktime float """
+        self.most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
+
+	def commit_most_recent_timestamp(self, signum, frame):
+		""" Before we exit, write out our most recent timestamp """
+		print "Recording most recently seen timestamp."
+        seconds_timestamp = time.mktime(self.most_recent_timestamp.timetuple())
+
+        with open(self.most_recent_timestamp_file, 'w') as f:
+            f.write(str(seconds_timestamp))
+
     def post_message(self, message, channel=None):
         """ Post a message to the the channel as our bot """
         self.slack_client.api_call(
@@ -78,14 +91,6 @@ class MinecraftBot:
             link_names=True,
             username=self.bot_id)
     
-    def remember_timestamp(self, timestamp):
-        """ Record the timestamp from a given log line as its mktime float """
-        d = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
-        seconds_timestamp = time.mktime(d.timetuple())
-
-        with open(self.most_recent_timestamp_file, 'w') as f:
-            f.write(str(seconds_timestamp))
-
     def parse_slack_output(self, slack_rtm_output):
         """ Parse the output of the Slack Real-Time Messaging firehose
         
@@ -114,6 +119,8 @@ class MinecraftBot:
         
     def run(self):
         """ The main loop - read from the Slack RTM firehose, and also keep an eye on the server's latest.log """
+        signal.signal(signal.SIGINT, self.commit_most_recent_timestamp)
+        
         if self.slack_client.rtm_connect():
             with open(self.latest_log) as f:
                 while True:
