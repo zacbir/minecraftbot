@@ -19,6 +19,17 @@ broadcast_patterns = [
   re.compile(r'^\[(.*?)\].*?\:\ (.*?) (has just earned.*?)$')
 ]
 
+def commit_most_recent_timestamp(signum, frame):
+	""" Before we exit, write out our most recent timestamp """
+	print "Recording most recently seen timestamp."
+	
+	bot = frame.f_back
+	
+	seconds_timestamp = time.mktime(bot.most_recent_timestamp.timetuple())
+
+	with open(bot.most_recent_timestamp_file, 'w') as f:
+		f.write(str(seconds_timestamp))
+
 class MinecraftBot:
     """ A Slack-bot for reporting on and interacting with a multiplayer Minecraft server.
     
@@ -119,7 +130,7 @@ class MinecraftBot:
         
     def run(self):
         """ The main loop - read from the Slack RTM firehose, and also keep an eye on the server's latest.log """
-        signal.signal(signal.SIGINT, self.commit_most_recent_timestamp)
+        signal.signal(signal.SIGINT, commit_most_recent_timestamp)
         
         if self.slack_client.rtm_connect():
             with open(self.latest_log) as f:
