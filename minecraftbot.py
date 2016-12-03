@@ -73,7 +73,7 @@ class MinecraftBot:
         """ Record the timestamp from a given log line as its mktime float """
         self.most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
 
-	def commit_most_recent_timestamp(self):
+	def commit_timestamp(self):
 		""" Before we exit, write out our most recent timestamp """
 		print "Recording most recently seen timestamp."
         seconds_timestamp = time.mktime(self.most_recent_timestamp.timetuple())
@@ -202,7 +202,7 @@ if __name__ == '__main__':
         args.directory)
     
     def handler(signum, frame):
-    	minecraft_bot.commit_most_recent_timestamp()
+    	minecraft_bot.commit_timestamp()
     
     signal.signal(signal.SIGINT, handler)
         
