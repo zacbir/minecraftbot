@@ -105,10 +105,11 @@ class MinecraftBot:
         
             If the command is not understoon, return a helpful message.
         """
-        command_args = command.split(' ', 1)
-        command, args = command_args if len(command_args) > 1 else command_args[0], None
+        command_args = command.split(' ')
+        command = command_args[0]
+        args = command_args[1:] if len(command_args) > 1 else []
         handler = self.commands.get(command, self.unknown_command)
-        response = handler(args)
+        response = handler(*args)
         self.post_message(response, channel)
         
     def run(self):
@@ -167,11 +168,11 @@ class MinecraftBot:
 
     # Commands
 
-    def unknown_command(self):
+    def unknown_command(self, *args, **kw):
         """ The default response for commands the bot doesn't understand. """
         return "So far, all I know how to do is `list`! Tell @zacbir to add more smarts!"
 
-    def list_current_players(self):
+    def list_current_players(self, *args, **kw):
         """ List the currently logged in users """
         current_players = self.current_players
         response = "There {} currently {} player{} logged into the server{}.".format(
