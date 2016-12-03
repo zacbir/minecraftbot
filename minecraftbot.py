@@ -86,7 +86,7 @@ class MinecraftBot:
         with open(self.most_recent_timestamp_file, 'w') as f:
             f.write(str(seconds_timestamp))
 
-    def parse_slack_output(slack_rtm_output):
+    def parse_slack_output(self, slack_rtm_output):
         """ Parse the output of the Slack Real-Time Messaging firehose
         
             Look for messages directed at our bot (using the self.at_bot marker), and return the relevant information
