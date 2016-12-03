@@ -50,7 +50,7 @@ class MinecraftBot:
         self.at_bot = "<@{}>".format(self.bot_id)
         self.slack_client = slack_client
         self.server_directory = server_directory
-        self.recent_log = os.path.join(self.server_directory, 'logs', 'recent.log')
+        self.latest_log = os.path.join(self.server_directory, 'logs', 'latest.log')
         self.most_recent_timestamp_file = os.path.join(self.server_directory, 'latest_timestamp.txt')
         self.channel = channel
         self.most_recent_timestamp = self.find_most_recent_timestamp()
@@ -111,11 +111,9 @@ class MinecraftBot:
         self.post_message(response, channel)
         
     def run(self):
-        """ The main loop - read from the Slack RTM firehose, and also keep an eye on the server's recent.log """
+        """ The main loop - read from the Slack RTM firehose, and also keep an eye on the server's latest.log """
         if self.slack_client.rtm_connect():
-            # If we're connected, get the most recent server log message we've seen
-
-            with open(self.recent_log) as f:
+            with open(self.latest_log) as f:
                 while True:
                     command, channel = self.parse_slack_output(self.slack_client.rtm_read())
                     if command and channel:
