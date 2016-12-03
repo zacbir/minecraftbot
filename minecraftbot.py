@@ -105,7 +105,7 @@ class MinecraftBot:
         
             If the command is not understoon, return a helpful message.
         """
-        command, args = command.split()
+        command, args = command.split(' ', 1)
         handler = self.commands.get(command, self.unknown_command)
         response = handler(args)
         self.post_message(response, channel)
