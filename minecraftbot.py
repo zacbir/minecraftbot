@@ -3,7 +3,6 @@ from datetime import datetime
 import os
 import os.path
 import re
-import signal
 import time
 
 from slackclient import SlackClient
@@ -72,10 +71,6 @@ class MinecraftBot:
     def remember_timestamp(self, timestamp):
         """ Record the timestamp from a given log line as its mktime float """
         self.most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
-
-	def commit_timestamp(self):
-		""" Before we exit, write out our most recent timestamp """
-		print "Recording most recently seen timestamp."
         seconds_timestamp = time.mktime(self.most_recent_timestamp.timetuple())
 
         with open(self.most_recent_timestamp_file, 'w') as f:
@@ -201,9 +196,4 @@ if __name__ == '__main__':
         slack_client,
         args.directory)
     
-    def handler(signum, frame):
-    	minecraft_bot.commit_timestamp()
-    
-    signal.signal(signal.SIGINT, handler)
-        
     minecraft_bot.run()
