@@ -128,7 +128,7 @@ class MinecraftBot:
                         if timestamp_match:
                             line_datetime = datetime.strptime(timestamp_match.group(1), TIMESTAMP_FORMAT)
         
-                        if line_datetime <= most_recent_timestamp:
+                        if line_datetime <= self.most_recent_timestamp:
                             continue
         
                         chat_match = chat_pattern.match(line)
