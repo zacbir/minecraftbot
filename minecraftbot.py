@@ -153,7 +153,7 @@ class MinecraftBot:
                             timestamp, user, message = left_match.groups()
                             self.post_message('{} {}'.format(user, message))
                             self.remember_timestamp(timestamp)
-                            self.current_players.remove(user)
+                            self.current_players.discard(user)
                             continue
                     
                         for pattern in broadcast_patterns:
