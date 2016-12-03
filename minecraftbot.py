@@ -35,7 +35,7 @@ class MinecraftBot:
 	    
 	"""
 	
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+	READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
 
 	def __init__(self, bot_id, slack_client, server_directory, channel="#general"):
 		""" Create a Minecraft bot. It requires a few bits to get going:
