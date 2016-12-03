@@ -57,7 +57,6 @@ class MinecraftBot:
         self.most_recent_timestamp = self.find_most_recent_timestamp()
         self.current_players = set()
         self.commands = {'list': self.list_current_players}
-        signal.signal(signal.SIGINT, self.commit_most_recent_timestamp)
 
     def find_most_recent_timestamp(self):
         """ Set the most recent timestamp seen by the bot """
@@ -74,7 +73,7 @@ class MinecraftBot:
         """ Record the timestamp from a given log line as its mktime float """
         self.most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
 
-	def commit_most_recent_timestamp(self, signum, frame):
+	def commit_most_recent_timestamp(self):
 		""" Before we exit, write out our most recent timestamp """
 		print "Recording most recently seen timestamp."
         seconds_timestamp = time.mktime(self.most_recent_timestamp.timetuple())
@@ -201,5 +200,10 @@ if __name__ == '__main__':
         os.environ.get('SLACK_BOT_ID'),
         slack_client,
         args.directory)
+    
+    def handler(signum, frame):
+    	minecraft_bot.commit_most_recent_timestamp()
+    
+    signal.signal(signal.SIGINT, handler)
         
     minecraft_bot.run()
