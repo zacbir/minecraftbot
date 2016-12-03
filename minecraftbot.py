@@ -68,11 +68,11 @@ class MinecraftBot:
         
         return most_recent_timestamp
         
-    def post_message(self, message, channel=self.channel):
+    def post_message(self, message, channel=None):
         """ Post a message to the the channel as our bot """
         self.slack_client.api_call(
             'chat.postMessage',
-            channel=channel,
+            channel=channel or self.channel,
             text=message,
             as_user=True,
             link_names=True,
