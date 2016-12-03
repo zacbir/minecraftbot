@@ -70,8 +70,8 @@ class MinecraftBot:
         
     def remember_timestamp(self, timestamp):
         """ Record the timestamp from a given log line as its mktime float """
-        self.most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
-        seconds_timestamp = time.mktime(self.most_recent_timestamp.timetuple())
+        most_recent_timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
+        seconds_timestamp = time.mktime(most_recent_timestamp.timetuple())
 
         with open(self.most_recent_timestamp_file, 'w') as f:
             f.write(str(seconds_timestamp))
