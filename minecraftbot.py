@@ -2,21 +2,14 @@ import argparse
 from datetime import datetime
 import os
 import os.path
-import re
 import time
 
 from slackclient import SlackClient
 
+from patterns import *
+
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-timestamp_pattern = re.compile(r'^\[(.*?)\].*?$')
-chat_pattern = re.compile(r'^\[(.*?)\].*?\:\ \<(.*?)\>\ (.*?)$')
-join_pattern = re.compile(r'^\[(.*?)\].*?\:\ (.*?) (joined the game)$')
-left_pattern = re.compile(r'^\[(.*?)\].*?\:\ (.*?) (left the game)$')
-broadcast_patterns = [
-  re.compile(r'^\[(.*?)\].*?\:\ (.*?) (was|walked|drowned|experienced|blew|hit|fell|went|burned|tried|discovered|got|starved|suffocated|withered.*?)$'),
-  re.compile(r'^\[(.*?)\].*?\:\ (.*?) (has just earned.*?)$')
-]
 
 class MinecraftBot:
     """ A Slack-bot for reporting on and interacting with a multiplayer Minecraft server.
@@ -55,7 +48,16 @@ class MinecraftBot:
         self.channel = channel
         self.most_recent_timestamp = self.find_most_recent_timestamp()
         self.current_players = set()
-        self.commands = {'list': self.list_current_players}
+        self.commands = {
+            'list': self.list_current_players,
+        }
+        self.log_parsers = {
+            chat_pattern: self.handle_chat,
+            join_pattern: self.handle_join,
+            left_pattern: self.handle_left,
+            died_pattern: self.handle_broadcast,
+            achievement_pattern: self.handle_broadcast,
+        }
 
     def find_most_recent_timestamp(self):
         """ Set the most recent timestamp seen by the bot """
@@ -111,7 +113,29 @@ class MinecraftBot:
         handler = self.commands.get(command, self.unknown_command)
         response = handler(*args)
         self.post_message(response, channel)
-        
+
+    def handle_chat(self, groups):
+        timestamp, user, message = groups
+        self.post_message('{} said: {}'.format(user, message))
+        self.remember_timestamp(timestamp)
+
+    def handle_join(self, groups):
+        timestamp, user, message = groups
+        self.post_message('{} {}'.format(user, message))
+        self.remember_timestamp(timestamp)
+        self.current_players.add(user)
+
+    def handle_left(self, groups):
+        timestamp, user, message = groups
+        self.post_message('{} {}'.format(user, message))
+        self.remember_timestamp(timestamp)
+        self.current_players.discard(user)
+
+    def handle_broadcast(self, groups):
+        timestamp, user, message = groups
+        self.post_message('{} {}'.format(user, message))
+        self.remember_timestamp(timestamp)
+
     def run(self):
         """ The main loop - read from the Slack RTM firehose, and also keep an eye on the server's latest.log """
         if self.slack_client.rtm_connect():
@@ -132,36 +156,11 @@ class MinecraftBot:
         
                         if line_datetime <= self.most_recent_timestamp:
                             continue
-        
-                        chat_match = chat_pattern.match(line)
-                        if chat_match:
-                            timestamp, user, message = chat_match.groups()
-                            self.post_message('{} said: {}'.format(user, message))
-                            self.remember_timestamp(timestamp)
-                            continue
-                    
-                        join_match = join_pattern.match(line)
-                        if join_match:
-                            timestamp, user, message = join_match.groups()
-                            self.post_message('{} {}'.format(user, message))
-                            self.remember_timestamp(timestamp)
-                            self.current_players.add(user)
-                            continue
-                    
-                        left_match = left_pattern.match(line)
-                        if left_match:
-                            timestamp, user, message = left_match.groups()
-                            self.post_message('{} {}'.format(user, message))
-                            self.remember_timestamp(timestamp)
-                            self.current_players.discard(user)
-                            continue
-                    
-                        for pattern in broadcast_patterns:
+
+                        for pattern, handler in self.log_parsers.items():
                             maybe_match = pattern.match(line)
                             if maybe_match:
-                                timestamp, user, message = maybe_match.groups()
-                                self.post_message('{} {}'.format(user, message))
-                                self.remember_timestamp(timestamp)
+                                handler(maybe_match.groups())
                                 continue
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
