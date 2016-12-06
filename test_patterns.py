@@ -64,6 +64,12 @@ achievement_messages = [
     '[2016-12-02 13:18:57] [Server thread/INFO]: [player] has just earned the achievement [Achievement Name]',
 ]
 
+slack_messages = [
+    '<@SOMEBOTID>: list',
+    '<@SOMEBOTID> list',
+    '<@SOMEBOTID> top skeleton',
+]
+
 def assert_pattern_matches(pattern, message):
     assert pattern.match(message) is not None, "\"{}\" does not match r'{}'".format(message, pattern.pattern)
 
@@ -86,3 +92,7 @@ def test_death_messages():
 def test_achievement_messages():
     for message in achievement_messages:
         assert_pattern_matches(achievement_pattern, message)
+
+def test_slack_messages():
+    for message in slack_messages:
+        assert_pattern_matches(slack_pattern, message)

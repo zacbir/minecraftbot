@@ -96,10 +96,11 @@ class MinecraftBot:
         output_list = slack_rtm_output
         if output_list and len(output_list) > 0:
             for output in output_list:
-                if output and 'text' in output and self.at_bot in output['text']:
-                    # return text after the @ mention, whitespace removed
-                    return output['text'].split(self.at_bot)[1].strip().lower(), \
-                           output['channel']
+                if output and 'text' in output:
+                    maybe_match = slack_pattern.match(output['text'])
+                    if maybe_match and maybe_match.group('addressee') == self.at_bot:
+                        # return text after the @ mention, whitespace removed
+                        return maybe_match.group('command').lower(), output['channel']
         return None, None
 
     def handle_command(self, command, channel):
@@ -113,6 +114,24 @@ class MinecraftBot:
         handler = self.commands.get(command, self.unknown_command)
         response = handler(*args)
         self.post_message(response, channel)
+
+    # Commands
+
+    def unknown_command(self, *args, **kw):
+        """ The default response for commands the bot doesn't understand. """
+        return "So far, all I know how to do is `list`! Tell @zacbir to add more smarts!"
+
+    def list_current_players(self, *args, **kw):
+        """ List the currently logged in users """
+        current_players = self.current_players
+        response = "There {} currently {} player{} logged into the server{}.".format(
+            'is' if len(current_players) == 1 else 'are',
+            len(current_players),
+            '' if len(current_players) == 1 else 's',
+            '' if len(current_players) == 0 else ': {}'.format(', '.join(current_players)))
+        return response
+
+    # Log line parsers
 
     def handle_chat(self, groups):
         timestamp, user, message = groups
@@ -165,22 +184,6 @@ class MinecraftBot:
         else:
             print("Connection failed. Invalid Slack token or bot ID?")
 
-    # Commands
-
-    def unknown_command(self, *args, **kw):
-        """ The default response for commands the bot doesn't understand. """
-        return "So far, all I know how to do is `list`! Tell @zacbir to add more smarts!"
-
-    def list_current_players(self, *args, **kw):
-        """ List the currently logged in users """
-        current_players = self.current_players
-        response = "There {} currently {} player{} logged into the server{}.".format(
-            'is' if len(current_players) == 1 else 'are',
-            len(current_players),
-            '' if len(current_players) == 1 else 's',
-            '' if len(current_players) == 0 else ': {}'.format(', '.join(current_players)))
-        return response
-    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch a bot to communicate information about a shared Minecraft server to Slack')
