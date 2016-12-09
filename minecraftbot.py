@@ -81,7 +81,15 @@ class MinecraftBot:
             died_pattern: self.handle_broadcast,
             achievement_pattern: self.handle_broadcast,
         }
-        self.launch_args = ['java', '-Xmx1024M', '-Xms1024M', '-Dlog4j.configurationFile=custom-log4j2.xml', '-jar', 'current.jar', 'nogui']
+        self.launch_args = [
+            'java',
+            '-Xmx1024M',
+            '-Xms1024M',
+            '-Dlog4j.configurationFile={}'.format(os.path.join(self.server_directory, 'custom-log4j2.xml')),
+            '-jar',
+            os.path.join(self.server_directory, 'current.jar'),
+            'nogui'
+        ]
         signal.signal(signal.SIGINT, self.handle_signal)
 
     # Bot/server
@@ -126,6 +134,7 @@ class MinecraftBot:
     def launch_server(self):
         """ Launch the server """
         if not self.server_process:
+            os.chdir(self.server_directory)
             self.server_process = subprocess.Popen(self.launch_args, bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.server_thread = threading.Thread(target=enqueue_output, args=(self.server_process.stdout, self.server_message_queue))
             self.server_thread.daemon = True
