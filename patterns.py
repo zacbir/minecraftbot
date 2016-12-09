@@ -1,6 +1,8 @@
 import re
 
 timestamp_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?$')
+version_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?:\ Starting minecraft server version (?P<version>.*?)$')
+port_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?:\ Starting Minecraft server on \*:(?P<port>.*?)$')
 chat_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?\:\ \<(?P<user>.*?)\>\ (?P<message>.*?)$')
 join_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?\:\ (?P<user>.*?) (?P<message>joined the game)$')
 left_pattern = re.compile(r'^\[(?P<timestamp>.*?)\].*?\:\ (?P<user>.*?) (?P<message>left the game)$')
